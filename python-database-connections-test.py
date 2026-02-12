@@ -1,4 +1,5 @@
 import mysql.connector
+import tkinter as tk
 
 conn = mysql.connector.connect(
     host="localhost",
@@ -38,7 +39,23 @@ cursor.execute(sql_select)
 
 rows = cursor.fetchall()
 
+# https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor-fetchall.html
+
 for row in rows:
     print("Email Address:", row[0])
 
+
+# tkinter UI
+
+root = tk.Tk() # creates a new window called root
+
+label = tk.Label(root, text="Hello World", font=("Arial", 14))
+label.pack(pady=20) # top AND bottom padding
+
+# https://www.activestate.com/resources/quick-reads/how-to-use-pack-in-tkinter/
+
+show_button = tk.Button(root, text="Press me", font=("Arial", 12))
+show_button.pack(pady=10)
+
+root.mainloop() # keeps window running
 
