@@ -3,15 +3,15 @@ CREATE DATABASE Application;
 USE Application;
 
 CREATE TABLE Users(
-user_id int,
+user_id varchar(5),
 email_address varchar(200),
-password_hash varchar(50),
+password_hash varchar(200),
 PRIMARY KEY (user_id)
 );
 
 CREATE TABLE Profiles(
-profile_id int,
-user_id int,
+profile_id varchar(5),
+user_id varchar(5),
 user_first_name varchar(50),
 user_last_name varchar(50),
 phone_number varchar(15),
@@ -22,25 +22,25 @@ FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
 
 CREATE TABLE Departments(
-department_id int,
+department_id varchar(5),
 department_name varchar(100),
 PRIMARY KEY (department_id)
 );
 
 CREATE TABLE Roles(
-role_id int,
+role_id varchar(5),
 role_name varchar(100),
 PRIMARY KEY (role_id)
 );
 
 CREATE TABLE Skills(
-skill_id int,
+skill_id varchar(5),
 skill_name varchar(100),
 PRIMARY KEY (skill_id)
 );
 
 CREATE TABLE Locations(
-location_id int,
+location_id varchar(5),
 location_name varchar(100),
 address varchar(200),
 capacity int,
@@ -50,10 +50,10 @@ PRIMARY KEY (location_id)
 );
 
 CREATE TABLE Schedule_Slots(
-slot_id int,
-user_id int,
-skill_id int,
-location_id int,
+slot_id varchar(5),
+user_id varchar(5),
+skill_id varchar(5),
+location_id varchar(5),
 date date,
 slot_start_time time,
 slot_end_time time,
@@ -66,29 +66,29 @@ FOREIGN KEY (location_id) REFERENCES Locations(location_id)
 );
 
 CREATE TABLE JUNCTION_Users_Schedule_Slots(
-user_id int,
-slot_id int,
+user_id varchar(5),
+slot_id varchar(5),
 FOREIGN KEY (user_id) REFERENCES Users(user_id),
 FOREIGN KEY (slot_id) REFERENCES Schedule_Slots(slot_id)
 );
 
 CREATE TABLE JUNCTION_Users_Departments(
-user_id int,
-department_id int,
+user_id varchar(5),
+department_id varchar(5),
 FOREIGN KEY (user_id) REFERENCES Users(user_id),
 FOREIGN KEY (department_id) REFERENCES Departments(department_id)
 );
 
 CREATE TABLE JUNCTION_Users_Roles(
-user_id int,
-role_id int,
+user_id varchar(5),
+role_id varchar(5),
 FOREIGN KEY (user_id) REFERENCES Users(user_id),
 FOREIGN KEY (role_id) REFERENCES Roles(role_id)
 );
 
 CREATE TABLE JUNCTION_Users_Skills(
-user_id int,
-skill_id int,
+user_id varchar(5),
+skill_id varchar(5),
 FOREIGN KEY (user_id) REFERENCES Users(user_id),
 FOREIGN KEY (skill_id) REFERENCES Skills(skill_id)
 );
