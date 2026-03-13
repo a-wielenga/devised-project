@@ -1,8 +1,9 @@
 import mysql.connector
 import tkinter as tk
+from tkinter import messagebox # https://docs.python.org/3/library/tkinter.messagebox.html
 from argon2 import PasswordHasher
 
-# SQL
+# SQL connectiom
 conn = mysql.connector.connect(
     host="localhost",
     user="root",
@@ -15,58 +16,65 @@ cursor = conn.cursor()
 # https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor.html
 
 
-# Password hash
+## Password hash using Argon2 - security for passwords and verificiation
 ph = PasswordHasher()
 
-# Hashes and stores the hashed password
-hashedPassword = ph.hash("password123")
-#print(hashedPassword)
 
-# SQL
-sql_insert = """
-INSERT INTO Users (
-    user_id, email_address, password_hash
-)
-VALUES (%s, %s, %s) 
-"""
+# Login function
+def login():
+    email = email_entry.get()
+    user_entered_password = password_entry.get()
 
-values = (
-    "U001",
-    "example@email.com",
-    hashedPassword
-)
+    # Query user by email
+    sql_select = "SELECT password_hash FROM Users WHERE email_address = %s"
+    cursor.execute(sql_select, (email,))
+    result = cursor.fetchone() # fetches the row where the emails match - https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor-fetchone.html
 
-# %s = placeholders
-# https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor-execute.html
+    if result is None:
+        messagebox.showerror("Login Failed", "Email not found")
+        return
 
-cursor.execute(sql_insert, values) # https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor-execute.html
-conn.commit() # https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor-execute.html
+    stored_hash_password = result[0] # gives first value in result which is the stored password hash
 
-print("Inserted user!")
-
-
-sql_select = "SELECT email_address FROM Users;"
-cursor.execute(sql_select)
-
-rows = cursor.fetchall()
-
-# https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor-fetchall.html
-
-for row in rows:
-    print("Email Address:", row[0])
+    try:
+        # Verify Argon2 password
+        if ph.verify(stored_hash_password, user_entered_password):
+            messagebox.showinfo("Login Successful", "Welcome!")
+        else:
+            messagebox.showerror("Login Failed", "Incorrect password")
+    except:
+        messagebox.showerror("Login Failed", "Incorrect password")
 
 
 # tkinter UI
 
-root = tk.Tk() # creates a new window called root
+# Main window
+root = tk.Tk()
+root.title("Login Page")
+root.geometry("350x200")
+root.minsize(350, 200)   # Prevent shrinking too small
 
-label = tk.Label(root, text="Hello World", font=("Arial", 14))
-label.pack(pady=20) # top AND bottom padding
+# Centre Frame
+container = tk.Frame(root)
+container.pack(expand=True)   # This keeps it centred on resize, puts the container inside the window, lets it expand to fill extra space and centres it
 
 # https://www.activestate.com/resources/quick-reads/how-to-use-pack-in-tkinter/
+# https://www.geeksforgeeks.org/python/python-grid-method-in-tkinter/
+# https://www.pythonguis.com/faq/pack-place-and-grid-in-tkinter/
 
-show_button = tk.Button(root, text="Press me", font=("Arial", 12))
-show_button.pack(pady=10)
+# Username row
+tk.Label(container, text="Email:").grid(row=0, column=0, padx=10, pady=5, sticky="e") # e = East (right) keeps it with the entry field
+email_entry = tk.Entry(container)
+email_entry.grid(row=0, column=1, padx=10, pady=5)
+
+# Password row
+tk.Label(container, text="Password:").grid(row=1, column=0, padx=10, pady=5, sticky="e")
+password_entry = tk.Entry(container, show="*")
+password_entry.grid(row=1, column=1, padx=10, pady=5)
+
+# Login button
+login_button = tk.Button(container, text="Login", command=login)
+login_button.grid(row=2, column=0, columnspan=2, pady=20)
 
 root.mainloop() # keeps window running
 
