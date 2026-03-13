@@ -104,3 +104,4 @@ SELECT * FROM JUNCTION_Users_Schedule_Slots;
 SELECT * FROM JUNCTION_Users_Departments;
 SELECT * FROM JUNCTION_Users_Roles;
 SELECT * FROM JUNCTION_Users_Skills;
+ 
