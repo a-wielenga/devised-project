@@ -1,6 +1,8 @@
 import mysql.connector
 import tkinter as tk
+from argon2 import PasswordHasher
 
+# SQL
 conn = mysql.connector.connect(
     host="localhost",
     user="root",
@@ -12,6 +14,15 @@ cursor = conn.cursor()
 
 # https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor.html
 
+
+# Password hash
+ph = PasswordHasher()
+
+# Hashes and stores the hashed password
+hashedPassword = ph.hash("password123")
+#print(hashedPassword)
+
+# SQL
 sql_insert = """
 INSERT INTO Users (
     user_id, email_address, password_hash
@@ -20,9 +31,9 @@ VALUES (%s, %s, %s)
 """
 
 values = (
-    1,
+    "U001",
     "example@email.com",
-    "password123"
+    hashedPassword
 )
 
 # %s = placeholders
