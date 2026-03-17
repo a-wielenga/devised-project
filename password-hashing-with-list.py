@@ -44,11 +44,11 @@ user_first_name = [
 ]
 
 user_last_name = [
-    "Burger",
-    "Tomato",
-    "Salad",
+    "Smith",
+    "Brown",
+    "Green",
     "Muppet",
-    "Beyuh"
+    "Bea"
 ]
 
 phone_number = [
@@ -60,11 +60,11 @@ phone_number = [
 ]
 
 address = [
-    "12 Something Road, Someplace, Some-other-Place, Whereabout, AB1 2AB",
-    "69 Roady Road, Somewhere, Place, Placeth, PL12 5DA",
-    "67 Rocky Lane, Rocksville, Rock, Rocketh, RO53 7GS",
-    "2 Streety Street, Streetsville, Streetish, Streetsham, ST67 7AB",
-    "90 Lost-all-Hope Lane, Dunnow, Fedupshire, Inturnalskreaming, WT67 3FU"
+    "12 Something Road, Someplace, Some-other-Place, Whereabout, AB1 2CD",
+    "69 Roady Road, Somewhere, Place, Placeth, EF34 5GH",
+    "67 Rocky Lane, Rocksville, Rock, Rocketh, IJ67 8KL",
+    "2 Streety Street, Streetsville, Streetish, Streetsham, MN9 1OP",
+    "90 Little Lane, St Place, Little, Littlesham, QR2 3ST"
 ]
 
 date_of_birth = [
