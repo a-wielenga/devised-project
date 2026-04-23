@@ -61,6 +61,40 @@ class PlaceholderEntry(tk.Entry):
         if self.is_password: # enabled masking when user enters text into password box
             self.config(show=self.show_char)
 
+class Sidebar(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent, bg="#2c3e50", width=175)
+        self.controller = controller
+        self.pack_propagate(False)
+        
+        # # Side bar
+        # sidebar = tk.Frame(self, bg="#2c3e50", width=175)
+        # sidebar.pack(side="left", fill="y")
+        # sidebar.pack_propagate(False)
+
+        # Top buttons
+        sidebar_frame = tk.Frame(self, bg="#2c3e50")
+        sidebar_frame.pack(fill="x", pady=10)
+
+        buttons = [
+            "Dashboard", "My Shifts", "Calendar", "Available Shifts", "Rotas", "Timesheets"
+        ]
+
+        for i, b in enumerate(buttons):
+            tk.Button(
+                sidebar_frame, text=b, bg="#34495e", fg="white",
+                relief="flat", height=2
+            ).pack(fill="x", padx=10, pady=(10 if i == 0 else 5, 5))
+
+        # Spacer pushes logout button to the bottom
+        tk.Frame(self, bg="#2c3e50").pack(expand=True, fill="both")
+
+        # Logout button
+        tk.Button(
+            self, text="Log Out", bg="#CA463A", fg="white",
+            relief="flat", height=2,
+            command=lambda: controller.show_frame("LoginPage")
+        ).pack(fill="x", padx=10, pady=20)
 
 # Main App Class - main window, deals with switching pages
 class App(tk.Tk):
@@ -218,30 +252,10 @@ class Dashboard(tk.Frame):
         super().__init__(parent, bg="#228097")
         self.controller = controller
 
-        # Side bar
-        sidebar = tk.Frame(self, bg="#2c3e50", width=175)
+        # Sidebar
+        sidebar = Sidebar(self, controller)
         sidebar.pack(side="left", fill="y")
-        sidebar.pack_propagate(False)
 
-        buttons = [
-            "Dashboard", "My Shifts", "Calendar", "Available Shifts", "Rotas", "Timesheets"
-        ]
-
-        for i, b in enumerate(buttons):
-            tk.Button(
-                sidebar, text=b, bg="#34495e", fg="white",
-                relief="flat", height=2
-            ).pack(fill="x", padx=10, pady=(10 if i == 0 else 5, 5))
-
-        # Spacer pushes logout button to the bottom
-        tk.Frame(sidebar, bg="#2c3e50").pack(expand=True, fill="both")
-
-        # Logout button
-        tk.Button(
-            sidebar, text="Log Out", bg="#CA463A", fg="white",
-            relief="flat", height=2,
-            command=lambda: controller.show_frame("LoginPage")
-        ).pack(fill="x", padx=10, pady=20)
 
         # Main content
         main = tk.Frame(self, bg="#228097")
