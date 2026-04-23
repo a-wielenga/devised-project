@@ -77,13 +77,29 @@ class Sidebar(tk.Frame):
         sidebar_frame.pack(fill="x", pady=10)
 
         buttons = [
-            "Dashboard", "My Shifts", "Calendar", "Available Shifts", "Rotas", "Timesheets"
+            "Dashboard", "My Shifts List", "Shift Calendar", "Available Shifts", "Rotas", "Timesheets"
         ]
+
+        pages = {
+            "Dashboard": "Dashboard",
+            "My Shifts List": "MyShiftsListPage"
+        }
+
+        # for i, b in enumerate(buttons):
+        #     tk.Button(
+        #         sidebar_frame, text=b, bg="#34495e", fg="white",
+        #         relief="flat", height=2
+        #     ).pack(fill="x", padx=10, pady=(10 if i == 0 else 5, 5))
 
         for i, b in enumerate(buttons):
             tk.Button(
-                sidebar_frame, text=b, bg="#34495e", fg="white",
-                relief="flat", height=2
+                sidebar_frame,
+                text=b,
+                bg="#34495e",
+                fg="white",
+                relief="flat",
+                height=2,
+                command=lambda name=b: controller.show_frame(pages[name])
             ).pack(fill="x", padx=10, pady=(10 if i == 0 else 5, 5))
 
         # Spacer pushes logout button to the bottom
@@ -176,14 +192,15 @@ class App(tk.Tk):
         self.frames = {} # Dictionary to store all the screens/frames
 
         # Add all screens here
-        for F in (LoginPage, Dashboard):
+        for F in (LoginPage, Dashboard, MyShiftsListPage):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
 
             frame.grid(row=0, column=0, sticky="nsew")
 
-        self.show_frame("LoginPage") # Default screen
+        # self.show_frame("LoginPage") # Default screen
+        self.show_frame("Dashboard") # Default screen
 
     # Frames/page switching
     def show_frame(self, page_name):
@@ -433,7 +450,7 @@ class Dashboard(tk.Frame):
         def add_shift_to_calendar(parent, column, start_hour, end_hour, colour, role, time_text):
             block = tk.Frame(parent, bg=colour, bd=1, relief="solid")
 
-            # Role line (bold, slightly larger)
+            # Role line
             tk.Label(
                 block,
                 text=role,
@@ -444,7 +461,7 @@ class Dashboard(tk.Frame):
                 wraplength=75
             ).pack(fill="x", padx=3, pady=(3, 0))
 
-            # Time line (normal weight, smaller)
+            # Time line
             tk.Label(
                 block,
                 text=time_text,
@@ -474,6 +491,38 @@ class Dashboard(tk.Frame):
             "Example Shift",
             "09:00 - 17:00"
         )
+
+class MyShiftsListPage(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent, bg="white")
+        self.controller = controller
+
+        # Sidebar
+        sidebar = Sidebar(self, controller)
+        sidebar.pack(side="left", fill="y")
+
+        # Main container
+        main = tk.Frame(self, bg="#228097")
+        main.pack(fill="both", expand=True)
+
+        main.grid_columnconfigure(0, weight=1)
+        main.grid_rowconfigure(0, weight=1)
+
+        # White container
+        left_container = tk.Frame(main, bg="white")
+        left_container.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
+
+        # Shift List class
+        shift_list = ShiftList(left_container)
+        shift_list.pack(fill="both", expand=True)
+
+        # Add example shifts
+        shifts = [
+            ("Example Shift", "Fri, 1 May 2026", "09:00 - 17:00"),
+        ] * 10
+
+        for role, date, time_range in shifts:
+            shift_list.add_shift(role, date, time_range)
 
 # Run App
 if __name__ == "__main__":
