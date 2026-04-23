@@ -96,6 +96,66 @@ class Sidebar(tk.Frame):
             command=lambda: controller.show_frame("LoginPage")
         ).pack(fill="x", padx=10, pady=20)
 
+class ShiftList(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent, bg="white")
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
+        # Left scrollable list
+        left_container = tk.Frame(self, bg="white")
+        left_container.grid(row=0, column=0, sticky="nswe", padx=(20, 10), pady=20)
+        left_container.grid_rowconfigure(1, weight=1)
+        left_container.grid_columnconfigure(0, weight=1)
+
+
+        tk.Label(left_container, text="My Next Shifts",
+                font=("Arial", 16, "bold")).pack(anchor="w")
+
+        self.shift_frame = tk.Frame(left_container)
+        self.shift_frame.pack(fill="both", expand=True, pady=10)
+
+
+        self.shift_canvas = tk.Canvas(self.shift_frame)
+        shift_scrollbar = ttk.Scrollbar(self.shift_frame, orient="vertical", command=self.shift_canvas.yview)
+        self.shift_list_frame = tk.Frame(self.shift_canvas)
+
+        self.shift_list_frame.bind(
+            "<Configure>",
+            lambda e: self.shift_canvas.configure(scrollregion=self.shift_canvas.bbox("all"))
+        )
+
+        self.shift_canvas.create_window((0, 0), window=self.shift_list_frame, anchor="nw", tags="shift_window")
+        self.shift_canvas.bind(
+            "<Configure>",
+            lambda e: self.shift_canvas.itemconfig("shift_window", width=e.width)
+        )
+        self.shift_canvas.configure(yscrollcommand=shift_scrollbar.set)
+
+        self.shift_canvas.pack(side="left", fill="both", expand=True)
+        shift_scrollbar.pack(side="right", fill="y")
+
+
+    class ShiftBlock(tk.Frame):
+        def __init__(self, parent, role, date, time_range, colour="#8ecae6"):
+            super().__init__(parent, bg=colour, bd=1, relief="solid")
+
+            tk.Label(self, text=role, bg=colour,
+                     font=("Arial", 12, "bold")).pack(anchor="w", padx=6, pady=(6, 0))
+
+            tk.Label(self, text=date, bg=colour,
+                     font=("Arial", 10)).pack(anchor="w", padx=6)
+
+            tk.Label(self, text=time_range, bg=colour,
+                     font=("Arial", 10)).pack(anchor="w", padx=6, pady=(0, 6))
+
+    # Public method to add shifts
+    def add_shift(self, role, date, time_range, colour="#89ABCD"):
+        block = self.ShiftBlock(self.shift_list_frame, role, date, time_range, colour)
+        block.pack(fill="x", padx=10, pady=5)
+
+
+
 # Main App Class - main window, deals with switching pages
 class App(tk.Tk):
     def __init__(self):
@@ -256,7 +316,6 @@ class Dashboard(tk.Frame):
         sidebar = Sidebar(self, controller)
         sidebar.pack(side="left", fill="y")
 
-
         # Main content
         main = tk.Frame(self, bg="#228097")
         main.pack(side="left", fill="both", expand=True)
@@ -265,36 +324,17 @@ class Dashboard(tk.Frame):
         main.grid_columnconfigure(1, weight=3)
         main.grid_rowconfigure(0, weight=1)
 
+        # Shift list
+        shift_list = ShiftList(main)
+        shift_list.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
 
-        # Left scrollable list
-        left_container = tk.Frame(main, bg="white")
-        left_container.grid(row=0, column=0, sticky="nswe", padx=(20, 10), pady=20)
+        # Add shifts
+        shifts = [
+            ("Example Shift", "Fri, 1 May 2026", "09:00 - 17:00"),
+        ] * 10
 
-        tk.Label(left_container, text="My Next Shifts",
-                font=("Arial", 16, "bold")).pack(anchor="w")
-
-        shift_frame = tk.Frame(left_container)
-        shift_frame.pack(fill="both", expand=True, pady=10)
-
-        shift_canvas = tk.Canvas(shift_frame)
-        shift_scrollbar = ttk.Scrollbar(shift_frame, orient="vertical", command=shift_canvas.yview)
-        shift_list_frame = tk.Frame(shift_canvas)
-
-        shift_list_frame.bind(
-            "<Configure>",
-            lambda e: shift_canvas.configure(scrollregion=shift_canvas.bbox("all"))
-        )
-
-        shift_canvas.create_window((0, 0), window=shift_list_frame, anchor="nw", tags="shift_window")
-        shift_canvas.bind(
-            "<Configure>",
-            lambda e: shift_canvas.itemconfig("shift_window", width=e.width)
-        )
-        shift_canvas.configure(yscrollcommand=shift_scrollbar.set)
-
-        shift_canvas.pack(side="left", fill="both", expand=True)
-        shift_scrollbar.pack(side="right", fill="y")
-
+        for role, date, time_range in shifts:
+            shift_list.add_shift(role, date, time_range)
 
         # Right calendar
         right_container = tk.Frame(main, bg="white")
@@ -389,34 +429,6 @@ class Dashboard(tk.Frame):
                 tk.Label(calendar_frame, text="", borderwidth=1, relief="solid",
                         width=12, height=2).grid(row=row, column=col)
 
-        # Creating a shift block in the shift list
-        class ShiftBlock(tk.Frame):
-            def __init__(self, parent, role, date, time_range, colour="#8ecae6"):
-                super().__init__(parent, bg=colour, bd=1, relief="solid")
-
-                tk.Label(self, text=role, bg=colour,
-                        font=("Arial", 12, "bold")).pack(anchor="w", padx=6, pady=(6, 0))
-
-                tk.Label(self, text=date, bg=colour,
-                        font=("Arial", 10)).pack(anchor="w", padx=6)
-
-                tk.Label(self, text=time_range, bg=colour,
-                        font=("Arial", 10)).pack(anchor="w", padx=6, pady=(0, 6))
-
-
-        # Add shifts
-        shifts = [
-            ("Example Shift", "Fri, 1 May 2026", "09:00 - 17:00"),
-        ] * 10
-
-        shift_background_colour = "#89ABCD"
-
-        # Add to left list
-        for role, date, time_range in shifts:
-            ShiftBlock(shift_list_frame, role, date, time_range, shift_background_colour).pack(
-                fill="x", padx=10, pady=5
-            )
-
         # Add a shift to the calendar on the right
         def add_shift_to_calendar(parent, column, start_hour, end_hour, colour, role, time_text):
             block = tk.Frame(parent, bg=colour, bd=1, relief="solid")
@@ -458,7 +470,7 @@ class Dashboard(tk.Frame):
             1, # column (day)
             9, # start hour
             17, # finish hour
-            shift_background_colour,
+            "#89ABCD",
             "Example Shift",
             "09:00 - 17:00"
         )
