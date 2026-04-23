@@ -1,0 +1,130 @@
+import tkinter as tk
+from tkinter import ttk
+
+root = tk.Tk()
+root.title("Shift Manager")
+root.state("zoomed")
+root.minsize(800, 600)
+
+root.grid_columnconfigure(0, weight=1)
+root.grid_columnconfigure(1, weight=6)
+root.grid_rowconfigure(0, weight=1)
+
+sidebar = tk.Frame(root, bg="#2c3e50")
+sidebar.grid(row=0, column=0, sticky="nswe")
+
+buttons = [
+    "My Shifts", "Calendar", "Available Shifts",
+    "Staff", "Rotas", "Timesheet"
+]
+
+for i, b in enumerate(buttons):
+    tk.Button(
+        sidebar, text=b, bg="#34495e", fg="white",
+        relief="flat", height=2
+    ).pack(fill="x", padx=10, pady=(10 if i == 0 else 5, 5))
+
+
+main = tk.Frame(root, bg="#228097")
+main.grid(row=0, column=1, sticky="nswe")
+
+
+main.grid_columnconfigure(0, weight=1)
+main.grid_columnconfigure(1, weight=3)
+main.grid_rowconfigure(0, weight=1)
+
+
+left_container = tk.Frame(main, bg="white")
+left_container.grid(row=0, column=0, sticky="nswe", padx=(20, 10), pady=20)
+
+
+tk.Label(left_container, text="My Next Shifts", font=("Arial", 16, "bold")).pack(anchor="w")
+
+
+shift_frame = tk.Frame(left_container)
+shift_frame.pack(fill="both", expand=True, pady=10)
+
+shift_canvas = tk.Canvas(shift_frame)
+shift_scrollbar = ttk.Scrollbar(shift_frame, orient="vertical", command=shift_canvas.yview)
+shift_list_frame = tk.Frame(shift_canvas)
+
+shift_list_frame.bind(
+    "<Configure>",
+    lambda e: shift_canvas.configure(scrollregion=shift_canvas.bbox("all"))
+)
+
+shift_canvas.create_window((0, 0), window=shift_list_frame, anchor="nw")
+shift_canvas.configure(yscrollcommand=shift_scrollbar.set)
+
+shift_canvas.pack(side="left", fill="both", expand=True)
+shift_scrollbar.pack(side="right", fill="y")
+
+# Example shifts
+for i in range(40):
+    tk.Label(shift_list_frame, text=f"Shift {i+1}: 09:00 - 17:00", anchor="w").pack(fill="x", pady=2)
+
+
+right_container = tk.Frame(main, bg="white")
+right_container.grid(row=0, column=1, sticky="nswe", padx=(10, 20), pady=20)
+
+tk.Label(right_container, text="Calendar", font=("Arial", 16, "bold")).pack(anchor="w")
+
+calendar_outer = tk.Frame(right_container)
+calendar_outer.pack(fill="both", expand=True, pady=10)
+
+time_canvas = tk.Canvas(calendar_outer, width=80)
+time_canvas.grid(row=0, column=0, sticky="ns")
+
+time_frame = tk.Frame(time_canvas)
+time_canvas.create_window((0, 0), window=time_frame, anchor="nw")
+
+cal_canvas = tk.Canvas(calendar_outer)
+cal_canvas.grid(row=0, column=1, sticky="nsew")
+
+cal_y_scroll = ttk.Scrollbar(calendar_outer, orient="vertical", command=lambda *args: sync_scroll(*args))
+cal_y_scroll.grid(row=0, column=2, sticky="ns")
+
+cal_x_scroll = ttk.Scrollbar(calendar_outer, orient="horizontal", command=cal_canvas.xview)
+cal_x_scroll.grid(row=1, column=1, sticky="ew")
+
+calendar_frame = tk.Frame(cal_canvas)
+cal_canvas.create_window((0, 0), window=calendar_frame, anchor="nw")
+
+# Sync scrollbars
+def sync_scroll(*args):
+    cal_canvas.yview(*args)
+    time_canvas.yview(*args)
+
+cal_canvas.configure(yscrollcommand=cal_y_scroll.set, xscrollcommand=cal_x_scroll.set)
+time_canvas.configure(yscrollcommand=cal_y_scroll.set)
+
+calendar_frame.bind("<Configure>", lambda e: cal_canvas.configure(scrollregion=cal_canvas.bbox("all")))
+time_frame.bind("<Configure>", lambda e: time_canvas.configure(scrollregion=time_canvas.bbox("all")))
+
+calendar_outer.grid_columnconfigure(1, weight=1)
+calendar_outer.grid_rowconfigure(0, weight=1)
+
+dates = [f"Day {i+1}" for i in range(14)]
+times = [f"{h}:00" for h in range(24)]
+
+tk.Label(time_frame, text="", width=8, height=1).grid(row=0, column=0, sticky="nsew")
+
+for i, t in enumerate(times, start=1):
+    tk.Label(time_frame, text=t, borderwidth=1, relief="flat",
+             width=8, height=2).grid(row=i, column=0, sticky="w")
+
+tk.Label(time_frame, text="", width=8, height=1).grid(row=len(times)+1, column=0, sticky="nsew")
+
+
+for col, d in enumerate(dates):
+    tk.Label(calendar_frame, text=d, borderwidth=1, relief="flat", height=2, width=12).grid(row=0, column=col)
+
+counter = 0
+
+for row, t in enumerate(times, start=1):
+    counter+=1
+    for col in range(len(dates)):
+        tk.Label(calendar_frame, text="", borderwidth=1, relief="solid", width=12, height=2).grid(row=row+1, column=col)
+
+print(counter)
+root.mainloop()
