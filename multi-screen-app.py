@@ -178,11 +178,16 @@ class MyShiftCalendar(tk.Frame):
         self.start_date = start_date
         self.num_days = num_days
 
-        tk.Label(self, text="Calendar",
-        font=("Arial", 16, "bold")).pack(anchor="w")
+        # Padding container for aesthetics to match padding of the shifts list
+        padding_container = tk.Frame(self, bg="white")
+        padding_container.pack(fill="both", expand=True, padx=20, pady=20)
 
-        calendar_outer = tk.Frame(self)
-        calendar_outer.pack(fill="both", expand=True, padx=20, pady=20)
+        tk.Label(padding_container, text="Calendar",
+                 font=("Arial", 16, "bold")).pack(anchor="w", pady=(0, 10))
+
+        calendar_outer = tk.Frame(padding_container)
+        calendar_outer.pack(fill="both", expand=True)
+
 
         # Left time column
         self.time_canvas = tk.Canvas(calendar_outer, width=80)
