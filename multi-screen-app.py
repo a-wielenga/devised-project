@@ -120,7 +120,7 @@ class ShiftList(tk.Frame):
 
         # Left scrollable list
         left_container = tk.Frame(self, bg="white")
-        left_container.grid(row=0, column=0, sticky="nswe", padx=(20, 10), pady=20)
+        left_container.grid(row=0, column=0, sticky="nswe", padx=20, pady=20)
         left_container.grid_rowconfigure(1, weight=1)
         left_container.grid_columnconfigure(0, weight=1)
 
@@ -169,6 +169,135 @@ class ShiftList(tk.Frame):
     def add_shift(self, role, date, time_range, colour="#89ABCD"):
         block = self.ShiftBlock(self.shift_list_frame, role, date, time_range, colour)
         block.pack(fill="x", padx=10, pady=5)
+
+# Calendar for Shifts
+class MyShiftCalendar(tk.Frame):
+    def __init__(self, parent, start_date, num_days=14):
+        super().__init__(parent, bg="white")
+
+        self.start_date = start_date
+        self.num_days = num_days
+
+        tk.Label(self, text="Calendar",
+        font=("Arial", 16, "bold")).pack(anchor="w")
+
+        calendar_outer = tk.Frame(self)
+        calendar_outer.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # Left time column
+        self.time_canvas = tk.Canvas(calendar_outer, width=80)
+        self.time_canvas.grid(row=0, column=0, sticky="ns")
+
+        self.time_frame = tk.Frame(self.time_canvas)
+        self.time_canvas.create_window((0, 0), window=self.time_frame, anchor="nw")
+
+        # Scrollable calendar section
+        self.cal_canvas = tk.Canvas(calendar_outer)
+        self.cal_canvas.grid(row=0, column=1, sticky="nsew")
+
+        self.cal_y_scroll = ttk.Scrollbar(calendar_outer, orient="vertical")
+        self.cal_y_scroll.grid(row=0, column=2, sticky="ns")
+
+        self.cal_x_scroll = ttk.Scrollbar(calendar_outer, orient="horizontal", command=self.cal_canvas.xview)
+        self.cal_x_scroll.grid(row=1, column=1, sticky="ew")
+
+        self.calendar_frame = tk.Frame(self.cal_canvas)
+        self.cal_canvas.create_window((0, 0), window=self.calendar_frame, anchor="nw")
+
+        # Sync scrollbars
+        def sync_scroll(*args): # https://www.w3schools.com/python/python_args_kwargs.asp
+            self.cal_canvas.yview(*args)
+            self.time_canvas.yview(*args)
+
+
+        self.cal_canvas.configure(yscrollcommand=self.cal_y_scroll.set, xscrollcommand=self.cal_x_scroll.set)
+        self.time_canvas.configure(yscrollcommand=self.cal_y_scroll.set)
+        self.cal_y_scroll.configure(command=sync_scroll)
+
+
+        def match_heights():
+            cal_bbox = self.cal_canvas.bbox("all")
+            time_bbox = self.time_canvas.bbox("all")
+
+            if not cal_bbox or not time_bbox:
+                return
+
+            cal_h = cal_bbox[3]
+            time_h = time_bbox[3]
+            max_h = max(cal_h, time_h)
+
+            self.cal_canvas.configure(scrollregion=(0, 0, cal_bbox[2], max_h))
+            self.time_canvas.configure(scrollregion=(0, 0, time_bbox[2], max_h))
+
+
+        self.calendar_frame.bind("<Configure>", lambda e: match_heights())
+        self.time_frame.bind("<Configure>", lambda e: match_heights())
+
+        calendar_outer.grid_columnconfigure(1, weight=1)
+        calendar_outer.grid_rowconfigure(0, weight=1)
+
+        # Calendar grid
+        self.build_calendar_grid()
+
+    def build_calendar_grid(self):
+        dates = [
+            (self.start_date + timedelta(days=i)).strftime("%a %d %b")
+            for i in range(self.num_days)
+        ]
+
+        times = [f"{h:02d}:00" for h in range(24)]
+
+        # Time column
+        tk.Label(self.time_frame, text="", width=20, height=1).grid(row=0, column=0)
+
+        for i, t in enumerate(times, start=1):
+            tk.Label(self.time_frame, text=t, width=12, height=2).grid(row=i, column=0, sticky="w")
+
+        # Date headers
+        for col, d in enumerate(dates):
+            tk.Label(self.calendar_frame, text=d, borderwidth=1, relief="flat",
+                    height=2, width=12).grid(row=0, column=col)
+
+        # Empty grid cells
+        for row, t in enumerate(times, start=1):
+            for col in range(len(dates)):
+                tk.Label(self.calendar_frame, text="", borderwidth=1, relief="solid",
+                        width=12, height=2).grid(row=row, column=col)
+
+    # Add a shift to the calendar on the right
+    def add_shift_to_calendar(self, column, start_hour, end_hour, colour, role, time_text):
+        block = tk.Frame(self.calendar_frame, bg=colour, bd=1, relief="solid")
+
+        # Role line
+        tk.Label(
+            block,
+            text=role,
+            bg=colour,
+            font=("Arial", 10, "bold"),
+            anchor="w",
+            justify="left",
+            wraplength=75
+        ).pack(fill="x", padx=3, pady=(3, 0))
+
+        # Time line
+        tk.Label(
+            block,
+            text=time_text,
+            bg=colour,
+            font=("Arial", 8),
+            anchor="w",
+            justify="left",
+            wraplength=75
+        ).pack(fill="x", padx=3, pady=(0, 3))
+
+        block.grid(
+            row=start_hour + 1,
+            column=column,
+            rowspan=(end_hour - start_hour),
+            sticky="nsew",
+            padx=1,
+            pady=1
+        )
 
 
 
@@ -352,144 +481,17 @@ class Dashboard(tk.Frame):
 
         for role, date, time_range in shifts:
             shift_list.add_shift(role, date, time_range)
+        
+        calendar = MyShiftCalendar(main, start_date=datetime(2026, 5, 1), num_days=14)
+        calendar.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
 
-        # Right calendar
-        right_container = tk.Frame(main, bg="white")
-        right_container.grid(row=0, column=1, sticky="nswe", padx=(10, 20), pady=20)
-
-        tk.Label(right_container, text="Calendar",
-                font=("Arial", 16, "bold")).pack(anchor="w")
-
-        calendar_outer = tk.Frame(right_container)
-        calendar_outer.pack(fill="both", expand=True, pady=10)
-
-        # Left time column
-        time_canvas = tk.Canvas(calendar_outer, width=80)
-        time_canvas.grid(row=0, column=0, sticky="ns")
-
-        time_frame = tk.Frame(time_canvas)
-        time_canvas.create_window((0, 0), window=time_frame, anchor="nw")
-
-        # Scrollable calendar section
-        cal_canvas = tk.Canvas(calendar_outer)
-        cal_canvas.grid(row=0, column=1, sticky="nsew")
-
-        cal_y_scroll = ttk.Scrollbar(calendar_outer, orient="vertical")
-        cal_y_scroll.grid(row=0, column=2, sticky="ns")
-
-        cal_x_scroll = ttk.Scrollbar(calendar_outer, orient="horizontal", command=cal_canvas.xview)
-        cal_x_scroll.grid(row=1, column=1, sticky="ew")
-
-        calendar_frame = tk.Frame(cal_canvas)
-        cal_canvas.create_window((0, 0), window=calendar_frame, anchor="nw")
-
-        # Sync scrollbars
-        def sync_scroll(*args): # https://www.w3schools.com/python/python_args_kwargs.asp
-            cal_canvas.yview(*args)
-            time_canvas.yview(*args)
-
-
-        cal_canvas.configure(yscrollcommand=cal_y_scroll.set, xscrollcommand=cal_x_scroll.set)
-        time_canvas.configure(yscrollcommand=cal_y_scroll.set)
-        cal_y_scroll.configure(command=sync_scroll)
-
-
-        def match_heights():
-            cal_bbox = cal_canvas.bbox("all")
-            time_bbox = time_canvas.bbox("all")
-
-            if not cal_bbox or not time_bbox:
-                return
-
-            cal_h = cal_bbox[3]
-            time_h = time_bbox[3]
-            max_h = max(cal_h, time_h)
-
-            cal_canvas.configure(scrollregion=(0, 0, cal_bbox[2], max_h))
-            time_canvas.configure(scrollregion=(0, 0, time_bbox[2], max_h))
-
-
-        calendar_frame.bind("<Configure>", lambda e: match_heights())
-        time_frame.bind("<Configure>", lambda e: match_heights())
-
-        calendar_outer.grid_columnconfigure(1, weight=1)
-        calendar_outer.grid_rowconfigure(0, weight=1)
-
-
-        # Calendar grid
-
-        # Generate dates
-        start_date = datetime(2026, 5, 1)   # 1st May 2026
-        num_days = 14                       # two weeks
-
-        dates = [
-            (start_date + timedelta(days=i)).strftime("%a %d %b")
-            for i in range(num_days)
-        ]
-
-        times = [f"{h:02d}:00" for h in range(24)]
-
-        # Time column
-        tk.Label(time_frame, text="", width=20, height=1).grid(row=0, column=0)
-
-        for i, t in enumerate(times, start=1):
-            tk.Label(time_frame, text=t, width=12, height=2).grid(row=i, column=0, sticky="w")
-
-        # Date headers
-        for col, d in enumerate(dates):
-            tk.Label(calendar_frame, text=d, borderwidth=1, relief="flat",
-                    height=2, width=12).grid(row=0, column=col)
-
-        # Empty grid cells
-        for row, t in enumerate(times, start=1):
-            for col in range(len(dates)):
-                tk.Label(calendar_frame, text="", borderwidth=1, relief="solid",
-                        width=12, height=2).grid(row=row, column=col)
-
-        # Add a shift to the calendar on the right
-        def add_shift_to_calendar(parent, column, start_hour, end_hour, colour, role, time_text):
-            block = tk.Frame(parent, bg=colour, bd=1, relief="solid")
-
-            # Role line
-            tk.Label(
-                block,
-                text=role,
-                bg=colour,
-                font=("Arial", 10, "bold"),
-                anchor="w",
-                justify="left",
-                wraplength=75
-            ).pack(fill="x", padx=3, pady=(3, 0))
-
-            # Time line
-            tk.Label(
-                block,
-                text=time_text,
-                bg=colour,
-                font=("Arial", 8),
-                anchor="w",
-                justify="left",
-                wraplength=75
-            ).pack(fill="x", padx=3, pady=(0, 3))
-
-            block.grid(
-                row=start_hour + 1,
-                column=column,
-                rowspan=(end_hour - start_hour),
-                sticky="nsew",
-                padx=1,
-                pady=1
-            )
-
-        # Add to calendar (examples)
-        add_shift_to_calendar(
-            calendar_frame,
-            1, # column (day)
-            9, # start hour
-            17, # finish hour
-            "#89ABCD",
-            "Example Shift",
-            "09:00 - 17:00"
+        calendar.add_shift_to_calendar(
+                1, # column (day)
+                9, # start hour
+                17, # finish hour
+                "#89ABCD",
+                "Example Shift",
+                "09:00 - 17:00"
         )
 
 class MyShiftsListPage(tk.Frame):
@@ -528,4 +530,3 @@ class MyShiftsListPage(tk.Frame):
 if __name__ == "__main__":
     app = App()
     app.mainloop() # keeps window running
-
