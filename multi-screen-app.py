@@ -82,7 +82,8 @@ class Sidebar(tk.Frame):
 
         pages = {
             "Dashboard": "Dashboard",
-            "My Shifts List": "MyShiftsListPage"
+            "My Shifts List": "MyShiftsListPage",
+            "Shift Calendar": "MyShiftsCalendarPage"
         }
 
         # for i, b in enumerate(buttons):
@@ -326,7 +327,7 @@ class App(tk.Tk):
         self.frames = {} # Dictionary to store all the screens/frames
 
         # Add all screens here
-        for F in (LoginPage, Dashboard, MyShiftsListPage):
+        for F in (LoginPage, Dashboard, MyShiftsListPage, MyShiftsCalendarPage):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
@@ -487,7 +488,11 @@ class Dashboard(tk.Frame):
         for role, date, time_range in shifts:
             shift_list.add_shift(role, date, time_range)
         
-        calendar = MyShiftCalendar(main, start_date=datetime(2026, 5, 1), num_days=14)
+        # Calendar
+        calendar = MyShiftCalendar(
+            main,
+            start_date=datetime(2026, 5, 1),
+            num_days=14)
         calendar.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
 
         calendar.add_shift_to_calendar(
@@ -530,6 +535,38 @@ class MyShiftsListPage(tk.Frame):
 
         for role, date, time_range in shifts:
             shift_list.add_shift(role, date, time_range)
+
+class MyShiftsCalendarPage(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent, bg="white")
+        self.controller = controller
+
+        # Sidebar
+        sidebar = Sidebar(self, controller)
+        sidebar.pack(side="left", fill="y")
+
+        # Main container
+        main = tk.Frame(self, bg="#228097")
+        main.pack(fill="both", expand=True)
+
+        main.grid_columnconfigure(0, weight=1)
+        main.grid_rowconfigure(0, weight=1)
+        
+        # Calendar
+        calendar = MyShiftCalendar(
+            main,
+            start_date=datetime(2026, 5, 1),
+            num_days=14)
+        calendar.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
+
+        calendar.add_shift_to_calendar(
+                1, # column (day)
+                9, # start hour
+                17, # finish hour
+                "#89ABCD",
+                "Example Shift",
+                "09:00 - 17:00"
+        )
 
 # Run App
 if __name__ == "__main__":
