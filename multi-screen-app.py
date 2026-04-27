@@ -77,13 +77,14 @@ class Sidebar(tk.Frame):
         sidebar_frame.pack(fill="x", pady=10)
 
         buttons = [
-            "Dashboard", "My Shifts List", "Shift Calendar", "Available Shifts", "Rotas", "Timesheets"
+            "Dashboard", "My Shifts List", "Shift Calendar", "Rota", "X", "X"
         ]
 
         pages = {
             "Dashboard": "Dashboard",
             "My Shifts List": "MyShiftsListPage",
-            "Shift Calendar": "MyShiftsCalendarPage"
+            "Shift Calendar": "MyShiftsCalendarPage",
+            "Rota": "ShiftPositionsCalendarPage"
         }
 
         # for i, b in enumerate(buttons):
@@ -130,7 +131,7 @@ class ShiftList(tk.Frame):
                 font=("Arial", 16, "bold")).pack(anchor="w")
 
         self.shift_frame = tk.Frame(left_container)
-        self.shift_frame.pack(fill="both", expand=True, pady=10)
+        self.shift_frame.pack(fill="both", expand=True)
 
 
         self.shift_canvas = tk.Canvas(self.shift_frame)
@@ -188,7 +189,6 @@ class MyShiftCalendar(tk.Frame):
 
         calendar_outer = tk.Frame(padding_container)
         calendar_outer.pack(fill="both", expand=True)
-
 
         # Left time column
         self.time_canvas = tk.Canvas(calendar_outer, width=80)
@@ -327,7 +327,7 @@ class App(tk.Tk):
         self.frames = {} # Dictionary to store all the screens/frames
 
         # Add all screens here
-        for F in (LoginPage, Dashboard, MyShiftsListPage, MyShiftsCalendarPage):
+        for F in (LoginPage, Dashboard, MyShiftsListPage, MyShiftsCalendarPage, ShiftPositionsCalendarPage):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
@@ -513,7 +513,7 @@ class MyShiftsListPage(tk.Frame):
         sidebar = Sidebar(self, controller)
         sidebar.pack(side="left", fill="y")
 
-        # Main container
+        # Main container / background
         main = tk.Frame(self, bg="#228097")
         main.pack(fill="both", expand=True)
 
@@ -545,7 +545,7 @@ class MyShiftsCalendarPage(tk.Frame):
         sidebar = Sidebar(self, controller)
         sidebar.pack(side="left", fill="y")
 
-        # Main container
+        # Main container / background
         main = tk.Frame(self, bg="#228097")
         main.pack(fill="both", expand=True)
 
@@ -567,6 +567,139 @@ class MyShiftsCalendarPage(tk.Frame):
                 "Example Shift",
                 "09:00 - 17:00"
         )
+
+class ShiftPositionsCalendarPage(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent, bg="white")
+        self.controller = controller
+
+        # Sidebar
+        sidebar = Sidebar(self, controller)
+        sidebar.pack(side="left", fill="y")
+
+        # Main container / background
+        main = tk.Frame(self, bg="#228097")
+        main.pack(side="left", fill="both", expand=True)
+
+        # Allows areas to be expandable (horizontally & vertically)
+        main.grid_columnconfigure(0, weight=1)
+        main.grid_rowconfigure(0, weight=1)
+
+        # Outer container
+        outer_container = tk.Frame(main, bg="white")
+        outer_container.grid(row=0, column=0, sticky="nswe", padx=20, pady=20)
+
+        outer_container.grid_columnconfigure(0, weight=1)
+        outer_container.grid_rowconfigure(0, weight=1)
+        
+        # Add spacing around content
+        inner_container = tk.Frame(outer_container, bg="white")
+        inner_container.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # Title
+        tk.Label(inner_container, text="Calendar",
+            font=("Arial", 16, "bold")).pack(anchor="w")
+
+        # Scrollable calendar area
+        calendar_outer = tk.Frame(inner_container)
+        calendar_outer.pack(fill="both", expand=True, pady=20)
+
+        cal_canvas = tk.Canvas(calendar_outer)
+        cal_canvas.grid(row=0, column=0, sticky="nsew")
+
+        # Scroll bars
+        cal_y_scroll = ttk.Scrollbar(calendar_outer, orient="vertical", command=cal_canvas.yview)
+        cal_y_scroll.grid(row=0, column=1, sticky="ns")
+
+        cal_x_scroll = ttk.Scrollbar(calendar_outer, orient="horizontal", command=cal_canvas.xview)
+        cal_x_scroll.grid(row=1, column=0, sticky="ew")
+
+        # Actual calendar frame
+        calendar_frame = tk.Frame(cal_canvas)
+        cal_canvas.create_window((0, 0), window=calendar_frame, anchor="nw")
+
+        cal_canvas.configure(yscrollcommand=cal_y_scroll.set, xscrollcommand=cal_x_scroll.set)
+
+        calendar_outer.grid_columnconfigure(0, weight=1)
+        calendar_outer.grid_rowconfigure(0, weight=1)
+
+        # Categories
+        self.categories = ["Team Leader", "Team Member"]
+
+        start_date = datetime(2026, 5, 1)
+        num_days = 14
+
+        dates = [
+            (start_date + timedelta(days=i)).strftime("%a %d %b")
+            for i in range(num_days)
+        ]
+
+        # Date headers
+        for col, d in enumerate(dates):
+            tk.Label(calendar_frame, text=d, borderwidth=1, relief="flat",
+                     height=2, width=12).grid(row=0, column=col, sticky="nsew")
+
+        # Build category rows
+        current_row = 1
+        self.category_shift_rows = {}
+        self.calendar_cells = {}
+
+
+        for cat in self.categories:
+            tk.Label(calendar_frame, text=cat, bg="#d9d9d9",
+                     font=("Arial", 11, "bold"), anchor="w",
+                     borderwidth=1, relief="solid").grid(
+                         row=current_row, column=0, columnspan=len(dates),
+                         sticky="nsew"
+                     )
+            current_row += 1
+
+            # Adds a cell under each header
+            for col in range(len(dates)):
+                cell = tk.Frame(calendar_frame, borderwidth=1, relief="solid")
+                cell.grid(row=current_row, column=col, sticky="nsew")
+                self.calendar_cells[(current_row, col)] = cell
+
+            self.category_shift_rows[cat] = current_row
+            current_row += 1
+
+        # Example shifts
+        # cat, day_col, times, employee
+        self.add_shift(0, 1, "09:00 - 17:00", "Example User")
+        self.add_shift(1, 1, "09:30 - 17:00", "Example User")
+        self.add_shift(1, 1, "09:30 - 17:00", "Example User")
+        self.add_shift(1, 1, "09:30 - 17:00", "Example User")
+
+    def add_shift(self, category_index, day_col, time_text, employee, colour="#8ecae6"):
+        category = self.categories[category_index]
+        row = self.category_shift_rows[category]
+        cell = self.calendar_cells[(row, day_col)]
+
+        # Checks if this is the first card so can create this spacing:
+            # 2px
+            # CARD
+            # 2px
+            # CARD
+            # 2px
+        is_first = not cell.winfo_children()
+        top_pad = 2 if is_first else 0
+
+        # Create the card
+        block = tk.Frame(cell, bg=colour, bd=1, relief="solid")
+        block.pack(fill="x", padx=2, pady=(top_pad, 2))
+
+        # Add time label
+        tk.Label(
+            block, text=time_text, bg=colour,
+            font=("Arial", 8, "bold"), anchor="w"
+        ).pack(fill="x", padx=3, pady=(3, 0))
+
+        # Add employee label
+        tk.Label(
+            block, text=employee, bg=colour,
+            font=("Arial", 8), anchor="w"
+        ).pack(fill="x", padx=3, pady=(0, 3))
+
 
 # Run App
 if __name__ == "__main__":
