@@ -50,6 +50,21 @@ map_img = ImageTk.PhotoImage(original_map)
 map_canvas.image = map_img
 map_canvas.create_image(0, 0, anchor="nw", image=map_img, tags="map")
 
+# Store map scale + offset
+map_scale = 1
+map_offset_x = 0
+map_offset_y = 0
+
+# Define locations in original image coordinates
+locations = {
+    "Admissions": (2100, 2850),
+    "FerrisWheel": (2530, 2300),
+    "HorseCarousel ": (700, 1930),
+    "CarsTrack": (1400,1260),
+    "RollerCoaster": (2050, 550),
+    "BigSwing": (3660, 640)
+}
+
 # Resize map
 def resize_map(event):
     canvas_width = event.width
@@ -66,7 +81,7 @@ def resize_map(event):
     new_h = int(img_h * scale)
 
     # Resize the image
-    resized = original_map.resize((new_w, new_h), Image.LANCZOS)
+    resized = original_map.resize((new_w, new_h), Image.LANCZOS) # LANCZOS keeps the image sharp when window resizes
     map_img_resized = ImageTk.PhotoImage(resized)
 
     # Update reference
@@ -84,6 +99,13 @@ def resize_map(event):
 
     # Keep map behind markers
     map_canvas.tag_lower("map")
+
+    global map_scale, map_offset_x, map_offset_y
+    map_scale = scale
+    map_offset_x = x_offset
+    map_offset_y = y_offset
+
+    draw_location_dots()
 
 
 map_canvas.bind("<Configure>", resize_map)
@@ -116,5 +138,24 @@ scrubber = tk.Scale(
     showvalue=False
 )
 scrubber.pack(fill="x", pady=10)
+
+# Draw the location dots
+def draw_location_dots():
+    map_canvas.delete("location_dot")
+
+    for name, (orig_x, orig_y) in locations.items():
+        # Convert original image coords → scaled canvas coords
+        x = map_offset_x + orig_x * map_scale
+        y = map_offset_y + orig_y * map_scale
+
+        r = 15
+        map_canvas.create_oval(
+            x - r, y - r, x + r, y + r,
+            fill="yellow",
+            outline="black",
+            width=2,
+            tags="location_dot"
+        )
+
 
 root.mainloop()
