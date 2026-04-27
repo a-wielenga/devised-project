@@ -407,6 +407,18 @@ class ShiftPositionsRotaPage(tk.Frame):
         calendar_outer.grid_columnconfigure(1, weight=1)
         calendar_outer.grid_rowconfigure(0, weight=1)
 
+        # Time slots
+        time_slots = []
+        t = datetime(2026, 5, 1, 0, 0)
+        for _ in range(49): # 00:00 to 00:00 (next day)
+            time_slots.append(t.strftime("%H:%M"))
+            t += timedelta(minutes=30)
+
+        # Set default scroll position to roughly 09:00
+        slot = time_slots.index("09:00")
+        fraction = slot / len(time_slots)
+        self.after(50, lambda: cal_canvas.xview_moveto(fraction)) # waits for 50ms until canvas drawn and then scrolls to 09:00
+
         # Frame for shifts
         calendar_frame = tk.Frame(cal_canvas)
         cal_canvas.create_window((0, 0), window=calendar_frame, anchor="nw")
@@ -418,12 +430,12 @@ class ShiftPositionsRotaPage(tk.Frame):
             lambda e: cal_canvas.configure(scrollregion=cal_canvas.bbox("all"))
         )
 
-        # Time slots
-        time_slots = []
-        t = datetime(2026, 5, 1, 0, 0)
-        for _ in range(49): # 00:00 to 00:00
-            time_slots.append(t.strftime("%H:%M"))
-            t += timedelta(minutes=30)
+        # # Time slots
+        # time_slots = []
+        # t = datetime(2026, 5, 1, 0, 0)
+        # for _ in range(49): # 00:00 to 00:00
+        #     time_slots.append(t.strftime("%H:%M"))
+        #     t += timedelta(minutes=30)
 
         # Positions
         positions = [
@@ -477,7 +489,9 @@ class ShiftPositionsRotaPage(tk.Frame):
     def time_to_slot(self, time_str):
         h, m = map(int, time_str.split(":")) # split it from HH:MM so h=HH and m=MM
         return h * 2 + (1 if m >= 30 else 0)
-        # multiply hour by 2 to get the grid and if the mins are 30 or above add another grid on
+        # each slot is 30m
+        # 2 slots per hour
+        # add 1 more slot if minutes are >= 30
 
     def add_shift(self, position, start, end, colour, employee):
         pos_index = self.positions.index(position) # gets the index of position for the suitable row
@@ -494,7 +508,7 @@ class ShiftPositionsRotaPage(tk.Frame):
                  font=("Arial", 8), anchor="w").pack(fill="x", padx=3, pady=(0, 3))
 
         block.grid(
-            row=pos_index + 1, # increases index so noy to place in time header row
+            row=pos_index + 1, # increases index (considers time header row)
             column=start_slot + 1,
             columnspan=span,
             sticky="nsew",
