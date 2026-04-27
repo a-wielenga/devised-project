@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk
-from datetime import datetime, timedelta
 from PIL import Image, ImageTk
 
 root = tk.Tk()
@@ -59,11 +58,96 @@ map_offset_y = 0
 locations = {
     "Admissions": (2100, 2850),
     "FerrisWheel": (2530, 2300),
-    "HorseCarousel ": (700, 1930),
-    "CarsTrack": (1400,1260),
+    "HorseCarousel": (700, 1930),
+    "CarsTrack": (1400, 1260),
     "RollerCoaster": (2050, 550),
     "BigSwing": (3660, 640)
 }
+
+
+staff_colours = {
+    "Staff A": "red",
+    "Staff B": "orange",
+    "Staff C": "green",
+    "Staff D": "blue",
+    "Staff E": "purple"
+}
+
+
+schedule = {
+    "Admissions": [
+        ("09:30", "17:30", "Staff A"),
+    ],
+    "FerrisWheel": [
+        ("10:30", "12:00", "Staff B"),
+        ("12:00", "13:00", "Staff C")
+    ],
+    "HorseCarousel": [
+        ("10:30", "12:30", "Staff D"),
+        ("12:30", "00:00", "Staff E")
+    ],
+    "CarsTrack": [
+        ("14:00", "16:00", "Staff B"),
+    ]
+}
+
+
+def time_to_minutes(tstr):
+    hours, minutes = map(int, tstr.split(":"))
+    return hours * 60 + minutes
+
+def get_staff_for_location(location_name, t):
+    if location_name not in schedule:
+        return None
+
+    for start_str, end_str, staff in schedule[location_name]:
+        start = time_to_minutes(start_str)
+        end = time_to_minutes(end_str)
+
+        if end == 0:
+            end = 1440
+
+        if start <= t < end:
+            return staff
+
+    return None
+
+
+current_time = 0
+
+def draw_location_dots():
+    map_canvas.delete("location_dot")
+    map_canvas.delete("location_label")
+
+    for location_name, (orig_x, orig_y) in locations.items():
+        staff_name = get_staff_for_location(location_name, current_time)
+
+        if staff_name is None:
+            continue
+
+        x = map_offset_x + orig_x * map_scale
+        y = map_offset_y + orig_y * map_scale
+
+        r = 15
+        colour = staff_colours.get(staff_name, "yellow")
+
+        # Dot
+        map_canvas.create_oval(
+            x - r, y - r, x + r, y + r,
+            fill=colour,
+            outline="black",
+            width=2,
+            tags="location_dot"
+        )
+
+        # Label above dot
+        map_canvas.create_text(
+            x, y - 25,
+            text=staff_name,
+            fill="black",
+            font=("Arial", 12, "bold"),
+            tags="location_label"
+        )
 
 # Resize map
 def resize_map(event):
@@ -90,7 +174,7 @@ def resize_map(event):
     # Clear old map
     map_canvas.delete("map")
 
-    # Center the image
+    # Centre the image
     x_offset = (canvas_width - new_w) // 2
     y_offset = (canvas_height - new_h) // 2
 
@@ -112,18 +196,21 @@ map_canvas.bind("<Configure>", resize_map)
 
 
 def update_positions(t):
-    t = int(t)
+    global current_time
+    current_time = int(t)
 
     # If the scrubber hits 1440 (24:00), DISPLAY 00:00
-    if t == 1440:
+    if current_time == 1440:
         display_hours = 0
         display_minutes = 0
     else:
-        display_hours = t // 60
-        display_minutes = t % 60
+        display_hours = current_time // 60
+        display_minutes = current_time % 60
 
     # Update the time label using the display values
     time_display.config(text=f"{display_hours:02d}:{display_minutes:02d}")
+
+    draw_location_dots()
 
 time_display = tk.Label(right_container, text="00:00", font=("Arial", 14, "bold"))
 time_display.pack()
@@ -134,28 +221,11 @@ scrubber = tk.Scale(
     from_=0,
     to=1440,
     orient="horizontal",
+    resolution=30,     # moves in 30-minute steps
+    # tickinterval=30,   # optional: shows ticks every 30 minutes
     command=lambda v: update_positions(v),
     showvalue=False
 )
 scrubber.pack(fill="x", pady=10)
-
-# Draw the location dots
-def draw_location_dots():
-    map_canvas.delete("location_dot")
-
-    for name, (orig_x, orig_y) in locations.items():
-        # Convert original image coords → scaled canvas coords
-        x = map_offset_x + orig_x * map_scale
-        y = map_offset_y + orig_y * map_scale
-
-        r = 15
-        map_canvas.create_oval(
-            x - r, y - r, x + r, y + r,
-            fill="yellow",
-            outline="black",
-            width=2,
-            tags="location_dot"
-        )
-
 
 root.mainloop()
