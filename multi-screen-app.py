@@ -251,12 +251,12 @@ class ShiftCategoryCalendarPage(tk.Frame):
         inner_container.pack(fill="both", expand=True, padx=20, pady=20)
 
         # Title
-        tk.Label(inner_container, text="Calendar",
-            font=("Arial", 16, "bold")).pack(anchor="w")
+        tk.Label(inner_container, text="Schedule",
+            font=("Arial", 16, "bold"), bg="white").pack(anchor="w")
 
         # Scrollable calendar area
         calendar_outer = tk.Frame(inner_container)
-        calendar_outer.pack(fill="both", expand=True, pady=20)
+        calendar_outer.pack(fill="both", expand=True, pady=10)
 
         cal_canvas = tk.Canvas(calendar_outer)
         cal_canvas.grid(row=0, column=0, sticky="nsew")
@@ -383,8 +383,8 @@ class ShiftPositionsRotaPage(tk.Frame):
         inner_container.pack(fill="both", expand=True, padx=20, pady=20)
 
         # Title
-        tk.Label(inner_container, text="Rota",
-            font=("Arial", 16, "bold")).pack(anchor="w")
+        tk.Label(inner_container, text="Daily Positions Rota",
+            font=("Arial", 16, "bold"), bg="white").pack(anchor="w")
 
         calendar_outer = tk.Frame(inner_container)
         calendar_outer.pack(fill="both", expand=True, pady=10)
@@ -546,7 +546,7 @@ class TimelineMapPage(tk.Frame):
 
         # Title
         tk.Label(inner_container, text="Timeline Map",
-            font=("Arial", 16, "bold")).pack(anchor="w")
+            font=("Arial", 16, "bold"), bg="white").pack(anchor="w")
                 
         # Canvas for map
         self.map_canvas = tk.Canvas(inner_container, bg="white")
@@ -760,10 +760,10 @@ class TimelineMapPage(tk.Frame):
 # Sidebar buttons
 sidebar_buttons = [
     ("Dashboard", Dashboard),
-    ("My Shifts List", MyShiftsListPage),
-    ("Shift Calendar", MyShiftsCalendarPage),
-    ("Rota", ShiftCategoryCalendarPage),
-    ("Position Rota", ShiftPositionsRotaPage),
+    ("My Shifts", MyShiftsListPage),
+    ("Shifts Calendar", MyShiftsCalendarPage),
+    ("Schedule", ShiftCategoryCalendarPage),
+    ("Daily Positions Rota", ShiftPositionsRotaPage),
     ("Timeline Map", TimelineMapPage)
 ]
 
@@ -877,9 +877,8 @@ class ShiftList(tk.Frame):
         left_container.grid_rowconfigure(1, weight=1)
         left_container.grid_columnconfigure(0, weight=1)
 
-
-        tk.Label(left_container, text="My Next Shifts",
-                font=("Arial", 16, "bold")).pack(anchor="w")
+        tk.Label(left_container, text="My Shifts",
+                font=("Arial", 16, "bold"), bg="white").pack(anchor="w", pady=(0, 10))
 
         self.shift_frame = tk.Frame(left_container)
         self.shift_frame.pack(fill="both", expand=True)
@@ -935,8 +934,8 @@ class MyShiftCalendar(tk.Frame):
         padding_container = tk.Frame(self, bg="white")
         padding_container.pack(fill="both", expand=True, padx=20, pady=20)
 
-        tk.Label(padding_container, text="Calendar",
-                 font=("Arial", 16, "bold")).pack(anchor="w", pady=(0, 10))
+        tk.Label(padding_container, text="Shifts Calendar",
+                 font=("Arial", 16, "bold"), bg="white").pack(anchor="w", pady=(0, 10))
 
         calendar_outer = tk.Frame(padding_container)
         calendar_outer.pack(fill="both", expand=True)
@@ -1102,7 +1101,6 @@ class App(tk.Tk):
             self.bind_all("<Return>", lambda event: frame.login()) # pressing return triggers login process
             # lambda = command is not instant
             
-
 # Run App
 if __name__ == "__main__":
     app = App()
