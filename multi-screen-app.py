@@ -415,9 +415,12 @@ class ShiftPositionsRotaPage(tk.Frame):
             t += timedelta(minutes=30)
 
         # Set default scroll position to roughly 09:00
-        slot = time_slots.index("09:00")
-        fraction = slot / len(time_slots)
-        self.after(50, lambda: cal_canvas.xview_moveto(fraction)) # waits for 50ms until canvas drawn and then scrolls to 09:00
+        def default_scroll(_=None):
+            slot = self.time_slots.index("09:00")
+            fraction = slot / len(self.time_slots)
+            cal_canvas.xview_moveto(fraction)
+
+        cal_canvas.bind("<Configure>", default_scroll) # waits until canvas has been drawn and then scrolls to 09:00
 
         # Frame for shifts
         calendar_frame = tk.Frame(cal_canvas)
@@ -452,7 +455,7 @@ class ShiftPositionsRotaPage(tk.Frame):
 
         # Adds the time slots
         for col, ts in enumerate(time_slots):
-            tk.Label(calendar_frame, text=ts, borderwidth=1, relief="solid",
+            tk.Label(calendar_frame, text=ts, borderwidth=1, relief="flat",
                      height=2, width=10).grid(row=0, column=col+1)
         
         # Creates the empty grid boxes
@@ -756,6 +759,10 @@ class TimelineMapPage(tk.Frame):
             showvalue=False
         )
         scrubber.pack(fill="x", pady=10)
+
+        # Set default scrubber position to 09:00 (540 minutes) 9*60=540
+        scrubber.set(540)
+        update_positions(540)   # also update the map + time label
 
 # Sidebar buttons
 sidebar_buttons = [
