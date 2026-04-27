@@ -84,7 +84,7 @@ schedule = {
     ],
     "HorseCarousel": [
         ("10:30", "12:30", "Staff D"),
-        ("12:30", "00:00", "Staff E")
+        ("12:30", "16:30", "Staff E")
     ],
     "CarsTrack": [
         ("14:00", "16:00", "Staff B"),
@@ -141,13 +141,32 @@ def draw_location_dots():
         )
 
         # Label above dot
-        map_canvas.create_text(
-            x, y - 25,
+        # Create the text first
+        text_id = map_canvas.create_text(
+            x, y - 35,
             text=staff_name,
             fill="black",
             font=("Arial", 12, "bold"),
             tags="location_label"
         )
+
+        # Get the bounding box of the text
+        x1, y1, x2, y2 = map_canvas.bbox(text_id)
+
+        # Add padding
+        pad = 4
+
+        # Draw rectangle behind the text
+        rect_id = map_canvas.create_rectangle(
+            x1 - pad, y1 - pad, x2 + pad, y2 + pad,
+            fill="white",
+            outline="black",
+            tags="location_label"
+        )
+
+        # Make sure the text is above the rectangle
+        map_canvas.tag_raise(text_id, rect_id)
+
 
 # Resize map
 def resize_map(event):
