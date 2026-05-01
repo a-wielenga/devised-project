@@ -106,7 +106,7 @@ class LoginPage(tk.Frame):
         try:
             if ph.verify(stored_hash, password):
                 messagebox.showinfo("Success", "Login successful")
-                self.controller.show_frame("Dashboard")
+                self.controller.show_frame(Dashboard)
             else:
                 messagebox.showerror("Login Failed", "Incorrect password")
         except:
@@ -869,7 +869,7 @@ class Sidebar(tk.Frame):
         tk.Button(
             self, text="Log Out", bg="#CA463A", fg="white",
             relief="flat", height=2,
-            command=lambda: controller.show_frame("LoginPage")
+            command=lambda: controller.show_frame(LoginPage)
         ).pack(fill="x", padx=10, pady=20)
 
 class ShiftList(tk.Frame):
@@ -1083,6 +1083,10 @@ class App(tk.Tk):
         # Creates frames/pages
         self.frames = {} # Dictionary to store all the screens/frames
 
+        login_frame = LoginPage(container, self)
+        self.frames[LoginPage] = login_frame
+        login_frame.grid(row=0, column=0, sticky="nsew")
+
         # Add all screens here
         for label, PageClass in sidebar_buttons:
             frame = PageClass(container, self)
@@ -1091,8 +1095,8 @@ class App(tk.Tk):
 
             frame.grid(row=0, column=0, sticky="nsew")
 
-        # self.show_frame(LoginPage) # Default screen
-        self.show_frame(Dashboard) # Default screen
+        self.show_frame(LoginPage) # Default screen
+        # self.show_frame(Dashboard) # Default screen
 
     # Frames/page switching
     def show_frame(self, page_class):
@@ -1104,7 +1108,7 @@ class App(tk.Tk):
         self.unbind_all("<Return>")
 
         # Only bind Return for LoginPage
-        if page_class.__name__ == "LoginPage":
+        if page_class.__name__ == LoginPage:
             self.bind_all("<Return>", lambda event: frame.login()) # pressing return triggers login process
             # lambda = command is not instant
             
